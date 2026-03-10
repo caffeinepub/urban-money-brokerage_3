@@ -253,6 +253,93 @@ export default function App() {
     printWindow.print();
   }
 
+  function printRecord(record: RecordData) {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    const sn = String(record.serialNumber);
+    const isReceived = record.remark === "received";
+    const gross = record.grossAmount ?? 0;
+    const net = record.netAmount ?? 0;
+    const loan = record.loanAmount ?? 0;
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Urban Money Brokerage - Record #${sn}</title>
+  <style>
+    @page { size: A4 portrait; margin: 20mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #1a2744; padding-bottom: 14px; margin-bottom: 24px; }
+    .header-left h1 { font-size: 22px; font-weight: 800; color: #1a2744; letter-spacing: 1.5px; text-transform: uppercase; }
+    .header-left p { font-size: 10px; color: #7a8499; letter-spacing: 3px; text-transform: uppercase; margin-top: 3px; }
+    .header-right { text-align: right; font-size: 9px; color: #9a9a9a; }
+    .card { background: #f0f4ff; border: 1.5px solid #c5d0ea; border-radius: 10px; padding: 20px; box-shadow: 0 2px 12px rgba(26,39,68,0.08); }
+    .card-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #dde5f5; }
+    .card-title-text { font-size: 15px; font-weight: 800; color: #1a2744; letter-spacing: 0.5px; }
+    .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+    .badge-received { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; }
+    .field { padding: 8px 0; border-bottom: 1px dotted #cdd5e8; }
+    .field-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 1.2px; color: #7a8499; font-weight: 600; }
+    .field-value { font-size: 13px; font-weight: 700; color: #1a2744; margin-top: 3px; }
+    .summary-box { background: #1a2744; color: white; border-radius: 8px; padding: 14px 18px; margin-top: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .summary-item { text-align: center; }
+    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #8fa0c0; }
+    .summary-value { font-size: 14px; font-weight: 800; margin-top: 3px; }
+    .summary-sep { font-size: 18px; color: #4a5f88; font-weight: 300; }
+    .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 9px; color: #b0b8ca; border-top: 1px solid #e0e6f0; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h1>Urban Money Brokerage</h1>
+      <p>Financial Records Management System</p>
+    </div>
+    <div class="header-right">
+      <div style="font-weight:700;font-size:11px;color:#1a2744;">OFFICIAL RECORD</div>
+      <div style="margin-top:4px;">${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">
+      <span class="card-title-text">Brokerage Record &mdash; Serial No. ${sn}</span>
+      <span class="badge badge-${isReceived ? "received" : "pending"}">${isReceived ? "Received" : "Pending"}</span>
+    </div>
+    <div class="grid">
+      <div class="field"><div class="field-label">Finance</div><div class="field-value">${record.finance || "—"}</div></div>
+      <div class="field"><div class="field-label">Customer Name</div><div class="field-value">${record.customerName || "—"}</div></div>
+      <div class="field"><div class="field-label">MCF</div><div class="field-value">${record.mcf || "—"}</div></div>
+      <div class="field"><div class="field-label">Product</div><div class="field-value">${record.product || "—"}</div></div>
+      <div class="field"><div class="field-label">Gross Amount</div><div class="field-value">₹${gross.toFixed(2)}</div></div>
+      <div class="field"><div class="field-label">Net Amount</div><div class="field-value">₹${net.toFixed(2)}</div></div>
+      <div class="field"><div class="field-label">Loan Amount</div><div class="field-value">${loan ? `₹${loan.toFixed(2)}` : "—"}</div></div>
+      <div class="field"><div class="field-label">Brokerage Amt. Received Date</div><div class="field-value">${record.brokerageAmountReceivedDate ? formatDate(record.brokerageAmountReceivedDate) : "—"}</div></div>
+      <div class="field"><div class="field-label">Bank Amt. Received Date</div><div class="field-value">${record.bankAmountReceivedDate ? formatDate(record.bankAmountReceivedDate) : "—"}</div></div>
+      <div class="field"><div class="field-label">Status / Remark</div><div class="field-value"><span class="badge badge-${isReceived ? "received" : "pending"}">${isReceived ? "Received" : "Pending"}</span></div></div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-item"><div class="summary-label">Gross Amount</div><div class="summary-value">₹${gross.toFixed(2)}</div></div>
+      <div class="summary-sep">−</div>
+      <div class="summary-item"><div class="summary-label">Net Amount</div><div class="summary-value">₹${net.toFixed(2)}</div></div>
+      <div class="summary-sep">=</div>
+      <div class="summary-item"><div class="summary-label">Loan Amount</div><div class="summary-value" style="color:#fbbf24;">₹${loan.toFixed(2)}</div></div>
+    </div>
+  </div>
+  <div class="footer">
+    <span>🔒 CONFIDENTIAL — Urban Money Brokerage</span>
+    <span>Printed: ${new Date().toLocaleString("en-IN")}</span>
+  </div>
+</body>
+</html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  }
+
   function printAllRecords() {
     const toPrint = sortedRecords;
     if (toPrint.length === 0) {
@@ -261,22 +348,25 @@ export default function App() {
     }
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+    const totalGross = toPrint.reduce((s, r) => s + (r.grossAmount ?? 0), 0);
+    const totalNet = toPrint.reduce((s, r) => s + (r.netAmount ?? 0), 0);
+    const totalLoan = toPrint.reduce((s, r) => s + (r.loanAmount ?? 0), 0);
     const rows = toPrint
       .map(
         (r, i) => `
-      <tr style="background:${i % 2 === 0 ? "#fff" : "#f5f7fb"}">
-        <td style="text-align:center;font-weight:700">${String(r.serialNumber)}</td>
-        <td>${formatDate(r.brokerageAmountReceivedDate) || ""}</td>
-        <td>${formatDate(r.bankAmountReceivedDate) || ""}</td>
-        <td>${r.finance}</td>
-        <td style="font-weight:600">${r.customerName}</td>
+      <tr style="background:${i % 2 === 0 ? "#fff" : "#f8faff"}">
+        <td style="text-align:center;font-weight:800;color:#1a2744;">${String(r.serialNumber)}</td>
+        <td>${formatDate(r.brokerageAmountReceivedDate) || "—"}</td>
+        <td>${formatDate(r.bankAmountReceivedDate) || "—"}</td>
+        <td style="font-weight:600;">${r.finance}</td>
+        <td style="font-weight:700;">${r.customerName}</td>
         <td>${r.mcf}</td>
         <td>${r.product}</td>
-        <td style="text-align:right">${r.loanAmount != null ? `₹${r.loanAmount.toFixed(2)}` : ""}</td>
-        <td style="text-align:right">₹${r.grossAmount.toFixed(2)}</td>
-        <td style="text-align:right">₹${r.netAmount.toFixed(2)}</td>
-        <td style="text-align:center">
-          <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:${r.remark === "received" ? "#d1fae5" : "#fef3c7"};color:${r.remark === "received" ? "#065f46" : "#92400e"}">
+        <td style="text-align:right;">${r.loanAmount != null && r.loanAmount > 0 ? `₹${r.loanAmount.toFixed(2)}` : "—"}</td>
+        <td style="text-align:right;font-weight:600;">₹${(r.grossAmount ?? 0).toFixed(2)}</td>
+        <td style="text-align:right;font-weight:600;">₹${(r.netAmount ?? 0).toFixed(2)}</td>
+        <td style="text-align:center;">
+          <span style="display:inline-block;padding:2px 9px;border-radius:12px;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;background:${r.remark === "received" ? "#d1fae5" : "#fef3c7"};color:${r.remark === "received" ? "#065f46" : "#92400e"};border:1px solid ${r.remark === "received" ? "#a7f3d0" : "#fde68a"};">
             ${r.remark === "received" ? "Received" : "Pending"}
           </span>
         </td>
@@ -297,46 +387,69 @@ export default function App() {
   <meta charset="UTF-8">
   <title>Urban Money Brokerage - All Records</title>
   <style>
-    @page { size: A4 landscape; margin: 12mm; }
-    body { font-family: Arial, sans-serif; font-size: 10px; color: #111; }
-    .header { text-align: center; border-bottom: 3px solid #1a2744; padding-bottom: 10px; margin-bottom: 14px; }
-    .header h1 { margin: 0; font-size: 20px; color: #1a2744; letter-spacing: 2px; text-transform: uppercase; }
-    .header p { margin: 4px 0 0; font-size: 10px; color: #666; letter-spacing: 4px; text-transform: uppercase; }
-    .meta { display: flex; justify-content: space-between; font-size: 9px; color: #666; margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #1a2744; color: white; padding: 6px 6px; text-align: left; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; }
-    td { padding: 4px 6px; border: 1px solid #e0e0e0; font-size: 9.5px; }
-    .footer { margin-top: 12px; font-size: 8px; color: #aaa; text-align: right; border-top: 1px solid #eee; padding-top: 6px; }
+    @page { size: A4 landscape; margin: 15mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10px; color: #1a1a2e; }
+    .header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid #1a2744; padding-bottom: 10px; margin-bottom: 12px; }
+    .header-left h1 { font-size: 18px; font-weight: 800; color: #1a2744; letter-spacing: 1.5px; text-transform: uppercase; }
+    .header-left p { font-size: 9px; color: #7a8499; letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
+    .header-right { text-align: right; font-size: 9px; color: #7a8499; }
+    .meta { display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #5a6680; margin-bottom: 8px; background: #f0f4ff; padding: 6px 10px; border-radius: 5px; border-left: 3px solid #1a2744; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    th { background: #1a2744; color: white; padding: 7px 7px; text-align: left; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+    th.num { text-align: right; }
+    td { padding: 5px 7px; border-bottom: 1px solid #e8edf5; font-size: 9.5px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .totals-row td { background: #e8edf8; font-weight: 800; color: #1a2744; border-top: 2px solid #1a2744; font-size: 10px; }
+    .footer { display: flex; justify-content: space-between; font-size: 8px; color: #9aabbb; border-top: 1px solid #e0e6f0; padding-top: 7px; margin-top: 4px; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>Urban Money Brokerage</h1>
-    <p>Financial Records Management System</p>
+    <div class="header-left">
+      <h1>Urban Money Brokerage</h1>
+      <p>Financial Records Management System</p>
+    </div>
+    <div class="header-right">
+      <div style="font-weight:700;color:#1a2744;font-size:10px;">OFFICIAL REPORT</div>
+      <div style="margin-top:3px;">${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</div>
+    </div>
   </div>
   <div class="meta">
-    <span>Filter: ${filterLabel} &nbsp;|&nbsp; Total: ${toPrint.length} record${toPrint.length !== 1 ? "s" : ""}</span>
-    <span>Printed: ${new Date().toLocaleString("en-IN")}</span>
+    <span><strong>Filter:</strong> ${filterLabel} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Total Records:</strong> ${toPrint.length}</span>
+    <span>Generated: ${new Date().toLocaleString("en-IN")}</span>
   </div>
   <table>
     <thead>
       <tr>
-        <th>S/N</th>
+        <th style="text-align:center;width:40px;">S/N</th>
         <th>Brokerage Recd. Date</th>
         <th>Bank Recd. Date</th>
         <th>Finance</th>
         <th>Customer Name</th>
         <th>MCF</th>
         <th>Product</th>
-        <th>Loan Amount</th>
-        <th>Gross Amount</th>
-        <th>Net Amount</th>
-        <th>Status</th>
+        <th class="num">Loan Amount</th>
+        <th class="num">Gross Amount</th>
+        <th class="num">Net Amount</th>
+        <th style="text-align:center;">Status</th>
       </tr>
     </thead>
-    <tbody>${rows}</tbody>
+    <tbody>
+      ${rows}
+      <tr class="totals-row">
+        <td colspan="7" style="text-align:right;letter-spacing:1px;font-size:9px;text-transform:uppercase;">TOTALS</td>
+        <td style="text-align:right;">₹${totalLoan.toFixed(2)}</td>
+        <td style="text-align:right;">₹${totalGross.toFixed(2)}</td>
+        <td style="text-align:right;">₹${totalNet.toFixed(2)}</td>
+        <td></td>
+      </tr>
+    </tbody>
   </table>
-  <div class="footer">Urban Money Brokerage — Financial Records — Confidential Document</div>
+  <div class="footer">
+    <span>CONFIDENTIAL — Urban Money Brokerage — For Internal Use Only</span>
+    <span>Page 1 &nbsp;|&nbsp; ${new Date().toLocaleString("en-IN")}</span>
+  </div>
 </body>
 </html>`;
     printWindow.document.write(html);
@@ -1190,6 +1303,19 @@ export default function App() {
                           </TableCell>
                           <TableCell className="no-print">
                             <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                data-ocid={`records.print_button.${index + 1}`}
+                                onClick={() => printRecord(record)}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105"
+                                style={{
+                                  background: "oklch(0.93 0.08 150)",
+                                  color: "oklch(0.3 0.12 150)",
+                                }}
+                                title="Print this record"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                              </button>
                               <button
                                 type="button"
                                 data-ocid={`records.edit_button.${index + 1}`}
